@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dfxpy"
-version = "0.2.5"
+version = "0.2.6"
 authors = [
   { name="Sayantan", email="sayantanpatra68@gmail.com" },
 ]
@@ -32,6 +32,7 @@ dependencies = [
     "pandas>=2.0.0",
     "numpy>=1.24.0",
     "scikit-learn>=1.2.0",
+    "scipy>=1.10.0",
 ]
 
 [project.urls]

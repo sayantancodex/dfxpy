@@ -56,6 +56,23 @@ Performs an automated diagnostic "check-up" of the dataset.
 
 ---
 
+## 🔬 Research & Statistics
+
+### `profile(df)`
+Performs rigorous statistical profiling on numeric columns.
+- **Metrics**: Normality (Shapiro-Wilk $p$-value), Skewness, Kurtosis, Mean, and Std Dev.
+- **Use Case**: Critical for academic research to justify statistical assumptions.
+
+### `to_latex(df, caption="Summary", label="tab:summary")`
+Converts any DataFrame into a publication-ready LaTeX table.
+- **Returns**: A string containing the LaTeX code for a professional table.
+
+### `lineage(df)`
+Generates a unique SHA-256 fingerprint for the dataset.
+- **Use Case**: Ensuring reproducibility in research papers by hashing the exact data state used.
+
+---
+
 ## 🛠️ Feature Engineering
 
 ### `outliers(df, method='iqr', action='cap', columns=None)`

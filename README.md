@@ -4,10 +4,10 @@
   <img src="https://raw.githubusercontent.com/sayantancodex/dfxpy/main/media/logo.png" alt="dfxpy Logo" width="400">
 </p>
 
-[![PyPI version](https://img.shields.io/pypi/v/dfxpy.svg?cache=0.2.1)](https://pypi.org/project/dfxpy/)
-[![Python versions](https://img.shields.io/pypi/pyversions/dfxpy.svg?cache=0.2.1)](https://pypi.org/project/dfxpy/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?cache=0.2.1)](https://opensource.org/licenses/MIT)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?cache=0.2.1)]()
+[![PyPI version](https://img.shields.io/pypi/v/dfxpy.svg?cache=0.2.2)](https://pypi.org/project/dfxpy/)
+[![Python versions](https://img.shields.io/pypi/pyversions/dfxpy.svg?cache=0.2.2)](https://pypi.org/project/dfxpy/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?cache=0.2.2)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?cache=0.2.2)]()
 
 **dfxpy** is a high-performance Python library designed to reduce the entire data preparation and analysis workflow into a few powerful, deterministic operations. It helps data scientists and engineers go from raw, messy datasets to model-ready features in seconds, not hours.
 
@@ -103,11 +103,11 @@ dfxpy prepare data.csv --target price --output cleaned_features.csv
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to submit issues, feature requests, and pull requests.
+We welcome contributions! Please see our [CONTRIBUTING.md](https://github.com/sayantancodex/dfxpy/blob/main/CONTRIBUTING.md) for guidelines on how to submit issues, feature requests, and pull requests.
 
 ## 📄 License
 
-**dfxpy** is licensed under the [MIT License](LICENSE).
+**dfxpy** is licensed under the [MIT License](https://github.com/sayantancodex/dfxpy/blob/main/LICENSE).
 
 ---
 

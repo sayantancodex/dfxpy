@@ -8,11 +8,12 @@ Go from **raw dataset → clean, analyzed, model-ready data** in minimal lines o
 
 - **Fast**: Optimized for performance.
 - **Deterministic**: No AI randomness.
-- **Lightweight**: Minimal dependencies (Pandas, NumPy, Scikit-learn).
-- **Production-ready**: Follows PEP8 and best practices.
+- **Lightweight**: Minimal dependencies.
+- **Self-contained**: No need to import pandas directly for common tasks.
 
 ## ✨ Features
 
+- `load()` / `read_csv()`: Load data directly without importing pandas.
 - `auto()`: One-line cleaning, imputation, and encoding.
 - `eda()`: Structured, readable exploratory data analysis.
 - `audit()`: Intelligent diagnostics (ID detection, multicollinearity, skewness).
@@ -32,19 +33,18 @@ pip install dfxpy
 
 ```python
 import dfxpy as dfx
-import pandas as pd
 
-# Load raw data
-df = pd.read_csv("data.csv")
+# 1. Load data directly (no pandas import needed!)
+df = dfx.load("data.csv")
 
-# 1. Auto-clean everything
+# 2. Auto-clean everything
 df_clean = dfx.auto(df)
 
-# 2. Get insights
+# 3. Get insights
 dfx.eda(df_clean)
 dfx.audit(df_clean)
 
-# 3. Prepare for ML
+# 4. Prepare for ML
 X, y = dfx.prepare(df_clean, target="price")
 ```
 
@@ -62,6 +62,8 @@ dfxpy prepare data.csv --target price
 
 **Before (Standard Pandas):**
 ```python
+import pandas as pd
+df = pd.read_csv("data.csv")
 df.columns = [c.lower().replace(' ', '_') for c in df.columns]
 df = df.drop_duplicates()
 df['age'] = df['age'].fillna(df['age'].median())
@@ -74,6 +76,7 @@ y = df['target']
 **After (dfxpy):**
 ```python
 import dfxpy as dfx
+df = dfx.load("data.csv")
 df = dfx.auto(df)
 X, y = dfx.prepare(df, target='target')
 ```

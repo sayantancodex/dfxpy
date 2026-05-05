@@ -5,8 +5,9 @@ from .prepare import prepare
 from .outliers import handle_outliers as outliers
 from .feature_selection import suggest_features
 from .cleaning import clean_column_names, handle_missing
+from .io import load, read_csv, read_excel, DataFrame
 
-__version__ = "0.1.0"
+__version__ = "0.1.1" # Bump version
 __all__ = [
     "auto",
     "eda",
@@ -15,5 +16,9 @@ __all__ = [
     "outliers",
     "suggest_features",
     "clean_column_names",
-    "handle_missing"
+    "handle_missing",
+    "load",
+    "read_csv",
+    "read_excel",
+    "DataFrame"
 ]

@@ -33,10 +33,11 @@ def drop_duplicates(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
 
 def infer_types(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     """
-    Try to infer better data types for object columns.
+    Try to infer better data types for object/string columns.
     """
     df = df.copy()
-    obj_cols = df.select_dtypes(include=['object', 'string']).columns
+    # Check for both object and string dtypes
+    obj_cols = [c for c in df.columns if pd.api.types.is_string_dtype(df[c]) or df[c].dtype == 'object']
     
     for col in obj_cols:
         # Try numeric
@@ -49,18 +50,16 @@ def infer_types(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
         except (ValueError, TypeError):
             pass
         
-        # Try datetime (only if it looks like a date)
-        # Simple heuristic: at least 5 chars and has '-' or '/'
-        if df[col].dtype == 'object' and df[col].astype(str).str.len().mean() > 5:
-            try:
-                # Use a small sample to check for date-likeness
-                sample = df[col].dropna().head(10).astype(str)
-                if sample.str.contains(r'[-/]').any():
-                    df[col] = pd.to_datetime(df[col], errors='raise')
-                    if verbose:
-                        print(f"Converted '{col}' to datetime.")
-            except (ValueError, TypeError):
-                pass
+        # Try datetime
+        try:
+            # Check if it looks like a date (contains '-' or '/')
+            sample = df[col].dropna().head(10).astype(str)
+            if not sample.empty and sample.str.contains(r'[-/:]').any():
+                df[col] = pd.to_datetime(df[col], errors='raise')
+                if verbose:
+                    print(f"Converted '{col}' to datetime.")
+        except (ValueError, TypeError, pd.errors.ParserError):
+            pass
     
     return df
 
@@ -82,8 +81,8 @@ def handle_missing(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
             print(f"Dropped entirely empty columns: {all_null_cols}")
 
     numeric_cols = df.select_dtypes(include=['number']).columns
-    categorical_cols = df.select_dtypes(include=['object', 'category', 'string', 'bool']).columns
-    date_cols = df.select_dtypes(include=['datetime']).columns
+    categorical_cols = [c for c in df.columns if pd.api.types.is_string_dtype(df[c]) or df[c].dtype in ['object', 'category', 'bool']]
+    date_cols = df.select_dtypes(include=['datetime', 'datetime64']).columns
 
     for col in numeric_cols:
         if df[col].isnull().any():

@@ -1,9 +1,9 @@
 # dfxpy: The DataFrame Workflow Accelerator ⚡
 
-[![PyPI version](https://img.shields.io/pypi/v/dfxpy.svg)](https://pypi.org/project/dfxpy/)
-[![Python versions](https://img.shields.io/pypi/pyversions/dfxpy.svg)](https://pypi.org/project/dfxpy/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
+[![PyPI version](https://img.shields.io/pypi/v/dfxpy.svg?cache=0.2.0)](https://pypi.org/project/dfxpy/)
+[![Python versions](https://img.shields.io/pypi/pyversions/dfxpy.svg?cache=0.2.0)](https://pypi.org/project/dfxpy/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?cache=0.2.0)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?cache=0.2.0)]()
 
 **dfxpy** is a high-performance Python library designed to reduce the entire data preparation and analysis workflow into a few powerful, deterministic operations. It helps data scientists and engineers go from raw, messy datasets to model-ready features in seconds, not hours.
 

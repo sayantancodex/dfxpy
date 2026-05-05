@@ -4,10 +4,10 @@
   <img src="https://raw.githubusercontent.com/sayantancodex/dfxpy/main/media/logo.png" alt="dfxpy Logo" width="400">
 </p>
 
-[![PyPI version](https://img.shields.io/pypi/v/dfxpy.svg?cache=0.2.2)](https://pypi.org/project/dfxpy/)
-[![Python versions](https://img.shields.io/pypi/pyversions/dfxpy.svg?cache=0.2.2)](https://pypi.org/project/dfxpy/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?cache=0.2.2)](https://opensource.org/licenses/MIT)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?cache=0.2.2)]()
+[![PyPI version](https://img.shields.io/pypi/v/dfxpy.svg?cache=0.2.3)](https://pypi.org/project/dfxpy/)
+[![Python versions](https://img.shields.io/pypi/pyversions/dfxpy.svg?cache=0.2.3)](https://pypi.org/project/dfxpy/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?cache=0.2.3)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?cache=0.2.3)]()
 
 **dfxpy** is a high-performance Python library designed to reduce the entire data preparation and analysis workflow into a few powerful, deterministic operations. It helps data scientists and engineers go from raw, messy datasets to model-ready features in seconds, not hours.
 
@@ -54,6 +54,8 @@ Install the latest version via pip:
 ```bash
 pip install dfxpy
 ```
+
+For detailed usage and parameter definitions, see the [Full API Reference](https://github.com/sayantancodex/dfxpy/blob/main/API_REFERENCE.md).
 
 ---
 

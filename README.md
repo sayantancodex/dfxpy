@@ -1,7 +1,7 @@
 # dfxpy: The DataFrame Workflow Accelerator ⚡
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/sayantancodex/dfxpy/main/logo.png" alt="dfxpy Logo" width="400">
+  <img src="https://raw.githubusercontent.com/sayantancodex/dfxpy/main/media/logo.png" alt="dfxpy Logo" width="400">
 </p>
 
 [![PyPI version](https://img.shields.io/pypi/v/dfxpy.svg?cache=0.2.1)](https://pypi.org/project/dfxpy/)

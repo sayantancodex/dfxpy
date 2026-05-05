@@ -4,10 +4,10 @@ from .audit import audit
 from .prepare import prepare
 from .outliers import handle_outliers as outliers
 from .feature_selection import suggest_features
-from .cleaning import clean_column_names, handle_missing
+from .cleaning import clean_column_names, handle_missing, infer_types
 from .io import load, read_csv, read_excel, DataFrame
 
-__version__ = "0.1.1" # Bump version
+__version__ = "0.2.0"
 __all__ = [
     "auto",
     "eda",
@@ -17,6 +17,7 @@ __all__ = [
     "suggest_features",
     "clean_column_names",
     "handle_missing",
+    "infer_types",
     "load",
     "read_csv",
     "read_excel",

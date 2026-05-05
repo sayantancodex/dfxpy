@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Union, Tuple, Optional
-from .cleaning import clean_column_names, drop_duplicates, handle_missing
+from .cleaning import clean_column_names, drop_duplicates, handle_missing, infer_types
 from .encoding import one_hot_encode
 from .eda import eda as run_eda
 
@@ -12,6 +12,10 @@ def auto(
     """
     Automatically clean and prepare a DataFrame.
     """
+    if df.empty:
+        if verbose: print("Warning: Empty DataFrame provided.")
+        return (df, {}) if eda_report else df
+
     if verbose:
         print("\nStarting auto-cleaning workflow...")
 
@@ -21,10 +25,13 @@ def auto(
     # 2. Drop duplicates
     df = drop_duplicates(df, verbose=verbose)
     
-    # 3. Handle missing values
+    # 3. Infer better types (e.g. object -> numeric/date)
+    df = infer_types(df, verbose=verbose)
+    
+    # 4. Handle missing values
     df = handle_missing(df, verbose=verbose)
     
-    # 4. One-hot encode categorical variables
+    # 5. One-hot encode categorical variables
     df = one_hot_encode(df, verbose=verbose)
 
     if verbose:

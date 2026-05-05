@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dfxpy"
+version = "0.1.0"
+authors = [
+  { name="Sayantan", email="sayan@example.com" },
+]
+description = "A DataFrame workflow accelerator for fast, deterministic data prep and analysis."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scikit-learn>=1.2.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/sayantancodex/dfxpy"
+"Bug Tracker" = "https://github.com/sayantancodex/dfxpy/issues"
+
+[project.scripts]
+dfxpy = "dfxpy.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dfxpy*"]

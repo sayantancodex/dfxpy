@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+.env
+.venv
+env/
+venv/
+dummy_data.csv
+prepared_data.csv
+test_cli.csv
+implementation_plan.md
+task.md
+walkthrough.md

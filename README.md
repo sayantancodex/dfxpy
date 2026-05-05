@@ -1,5 +1,9 @@
 # dfxpy: The DataFrame Workflow Accelerator ⚡
 
+<p align="center">
+  <img src="logo.png" alt="dfxpy Logo" width="400">
+</p>
+
 [![PyPI version](https://img.shields.io/pypi/v/dfxpy.svg?cache=0.2.0)](https://pypi.org/project/dfxpy/)
 [![Python versions](https://img.shields.io/pypi/pyversions/dfxpy.svg?cache=0.2.0)](https://pypi.org/project/dfxpy/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?cache=0.2.0)](https://opensource.org/licenses/MIT)

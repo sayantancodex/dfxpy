@@ -7,7 +7,7 @@ from .feature_selection import suggest_features
 from .cleaning import clean_column_names, handle_missing, infer_types
 from .io import load, read_csv, read_excel, DataFrame
 
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 __all__ = [
     "auto",
     "eda",

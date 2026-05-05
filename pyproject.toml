@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "dfxpy"
 version = "0.2.0"
 authors = [
-  { name="Sayantan", email="sayan@example.com" },
+  { name="Sayantan", email="sayantanpatra68@gmail.com" },
 ]
 description = "A DataFrame workflow accelerator for fast, deterministic data prep and analysis."
 readme = "README.md"

@@ -14,7 +14,7 @@ from .ml import suggest
 from .history import analyze_cleaning
 from .research import profile_stats as profile, to_latex, get_lineage_hash as lineage, research_report
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 __all__ = [
     "auto",
     "eda",

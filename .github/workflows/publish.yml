@@ -2,8 +2,13 @@ name: Publish to PyPI
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   test:
@@ -29,6 +34,7 @@ jobs:
 
   build-n-publish:
     name: Build and publish to PyPI
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: test # This ensures we only publish if tests pass!
     runs-on: ubuntu-latest
     permissions:

@@ -62,3 +62,46 @@ def test_feature_suggestions(sample_df):
     suggestions = dfx.suggest_features(df_clean, target="target")
     
     assert "correlations" in suggestions
+
+def test_fix_advanced(sample_df):
+    df = sample_df.copy()
+    df['Revenue'] = ['$100', '$200', '$150', '$300', '$250', '$100', '$200', '$150', '$300', '$250']
+    df_fixed = dfx.fix(df, verbose=False)
+    assert df_fixed['revenue'].dtype != 'object'
+    assert 'user_id' in df_fixed.columns
+
+def test_compare_datasets(sample_df):
+    df1 = sample_df.copy()
+    df2 = sample_df.copy()
+    df2.loc[0, 'Age'] = 99
+    diff = dfx.compare(df1, df2)
+    assert diff['value_changes'] == 1
+
+def test_balance_data():
+    df = pd.DataFrame({
+        'feature': range(100),
+        'target': [0]*90 + [1]*10
+    })
+    df_balanced = dfx.balance(df, target='target', method='oversample')
+    assert df_balanced['target'].value_counts()[0] == df_balanced['target'].value_counts()[1]
+
+def test_validate_schema(sample_df):
+    schema = {'Age': {'type': 'number', 'min': 0}}
+    # Should not raise
+    dfx.validate(sample_df, schema)
+
+def test_pipeline_workflow(sample_df):
+    pipe = dfx.pipeline([dfx.clean_column_names, dfx.handle_missing])
+    df_out = pipe.run(sample_df, verbose=False)
+    assert 'user_id' in df_out.columns
+    assert df_out['age'].isnull().sum() == 0
+
+def test_ml_suggest(sample_df):
+    # Should run without error
+    dfx.suggest(sample_df, target='Target')
+
+def test_leakage_detection(sample_df):
+    df = sample_df.copy()
+    df['Secret'] = df['Target']
+    leaks = dfx.leakage(df, target='Target', verbose=False)
+    assert len(leaks) > 0

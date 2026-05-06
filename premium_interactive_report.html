@@ -1,0 +1,662 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dfxpy Premium Report</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+        <style>
+    :root {
+        --primary: #6366f1;
+        --accent: #22d3ee;
+        --bg: #0b0f1a;
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --text: #f8fafc;
+        --text-dim: #94a3b8;
+        --border: rgba(51, 65, 85, 0.5);
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+    }
+
+    body {
+        font-family: 'Outfit', 'Inter', sans-serif;
+        background: radial-gradient(circle at top right, #1e1b4b, #0b0f1a);
+        color: var(--text);
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    .sidebar {
+        width: 260px;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(12px);
+        border-right: 1px solid var(--border);
+        padding: 30px 20px;
+        z-index: 100;
+    }
+
+    .main-content {
+        margin-left: 260px;
+        padding: 40px;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: linear-gradient(to right, var(--primary), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .nav-item {
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-item:hover, .nav-item.active {
+        background: rgba(99, 102, 241, 0.15);
+        color: var(--text);
+    }
+
+    .card {
+        background: var(--card-bg);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .grid-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .stat-label { color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 2rem; font-weight: 700; margin-top: 5px; }
+
+    .tab-content { display: none; animation: fadeIn 0.4s ease; }
+    .tab-content.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Heatmap Styles */
+    .heatmap-grid {
+        display: grid;
+        gap: 2px;
+    }
+
+    .heatmap-cell {
+        aspect-ratio: 1;
+        border-radius: 2px;
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+
+    .heatmap-cell:hover {
+        transform: scale(1.2);
+        z-index: 10;
+        outline: 2px solid var(--accent);
+    }
+
+    /* Charts */
+    .svg-chart { width: 100%; height: 200px; }
+    .bar { fill: var(--primary); rx: 4; transition: 0.3s; }
+    .bar:hover { fill: var(--accent); }
+
+    /* Table Styles */
+    .table-container { overflow-x: auto; border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 16px; border-bottom: 1px solid var(--border); color: var(--text-dim); }
+    td { padding: 16px; border-bottom: 1px solid var(--border); }
+    tr:hover { background: rgba(255, 255, 255, 0.02); }
+
+    .search-box {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        padding: 10px 16px;
+        border-radius: 8px;
+        color: white;
+        width: 100%;
+        max-width: 300px;
+        margin-bottom: 20px;
+    }
+
+    .tooltip {
+        position: fixed;
+        background: #1e293b;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 1000;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+    </style>
+    </head>
+    <body>
+        <div class="tooltip" id="tooltip"></div>
+
+        <div class="sidebar">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                DFXPY
+            </div>
+            <div class="nav-item active" onclick="showTab('overview', this)">Overview</div>
+            <div class="nav-item" onclick="showTab('variables', this)">Variables</div>
+            <div class="nav-item" onclick="showTab('correlations', this)">Correlations</div>
+            <div class="nav-item" onclick="showTab('sample', this)">Data Preview</div>
+            
+            <div style="position: absolute; bottom: 30px; left: 20px; font-size: 0.8rem; color: var(--text-dim);">
+                Version 0.2.6<br>
+                2026-05-06 18:34
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- TAB: OVERVIEW -->
+            <div id="overview" class="tab-content active">
+                <h2 style="margin-top: 0;">Dataset Summary</h2>
+                <div class="grid-stats">
+                    <div class="card stat-card">
+                        <div class="stat-label">Total Rows</div>
+                        <div class="stat-value">1,000</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Total Columns</div>
+                        <div class="stat-value">8</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Missing Cells</div>
+                        <div class="stat-value">254</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Numeric Ratio</div>
+                        <div class="stat-value">62%</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Missingness Map</h3>
+                    <div class="heatmap-grid" style="grid-template-columns: repeat(8, 1fr); height: 150px;">
+    <div style="display: grid; grid-template-rows: repeat(100, 1fr);"><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div></div><div style="display: grid; grid-template-rows: repeat(100, 1fr);"><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div></div><div style="display: grid; grid-template-rows: repeat(100, 1fr);"><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div></div><div style="display: grid; grid-template-rows: repeat(100, 1fr);"><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div></div><div style="display: grid; grid-template-rows: repeat(100, 1fr);"><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div></div><div style="display: grid; grid-template-rows: repeat(100, 1fr);"><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div></div><div style="display: grid; grid-template-rows: repeat(100, 1fr);"><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div></div><div style="display: grid; grid-template-rows: repeat(100, 1fr);"><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div><div style="background: #1e293b;"></div><div style="background: #1e293b;"></div><div style="background: #ef4444;"></div></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; color: var(--text-dim); font-size: 0.7rem;">
+                        <span>Start</span>
+                        <span>Downsampled Sequence</span>
+                        <span>End</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: VARIABLES -->
+            <div id="variables" class="tab-content">
+                <h2 style="margin-top: 0;">Detailed Column Analysis</h2>
+    
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--accent);">Age</h3>
+                        <span style="font-size: 0.8rem; padding: 4px 10px; background: rgba(99,102,241,0.2); border-radius: 20px;">float64</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Missing</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">48 (4.8%)</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Unique</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">72</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Mean</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">52.90</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Median</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">52.50</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Std</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">21.04</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Min</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">18.00</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Max</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">89.00</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Skew</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">-0.01</div>
+                                </div>
+            
+                            </div>
+                        </div>
+                        <div style="flex: 2; height: 180px;">
+        <svg class="svg-chart" viewBox="0 0 1000 200" preserveAspectRatio="none"><rect x="0.0" y="20.0" width="48.0" height="180.0" class="bar" onmouseover="showTooltip(event, '65 values in bin [18.0, 21.6]')" onmouseout="hideTooltip()"></rect><rect x="50.0" y="42.15384615384616" width="48.0" height="157.84615384615384" class="bar" onmouseover="showTooltip(event, '57 values in bin [21.6, 25.1]')" onmouseout="hideTooltip()"></rect><rect x="100.0" y="108.61538461538461" width="48.0" height="91.38461538461539" class="bar" onmouseover="showTooltip(event, '33 values in bin [25.1, 28.6]')" onmouseout="hideTooltip()"></rect><rect x="150.0" y="44.923076923076906" width="48.0" height="155.0769230769231" class="bar" onmouseover="showTooltip(event, '56 values in bin [28.6, 32.2]')" onmouseout="hideTooltip()"></rect><rect x="200.0" y="86.46153846153847" width="48.0" height="113.53846153846153" class="bar" onmouseover="showTooltip(event, '41 values in bin [32.2, 35.8]')" onmouseout="hideTooltip()"></rect><rect x="250.0" y="72.61538461538461" width="48.0" height="127.38461538461539" class="bar" onmouseover="showTooltip(event, '46 values in bin [35.8, 39.3]')" onmouseout="hideTooltip()"></rect><rect x="300.0" y="78.15384615384615" width="48.0" height="121.84615384615385" class="bar" onmouseover="showTooltip(event, '44 values in bin [39.3, 42.8]')" onmouseout="hideTooltip()"></rect><rect x="350.0" y="50.46153846153845" width="48.0" height="149.53846153846155" class="bar" onmouseover="showTooltip(event, '54 values in bin [42.8, 46.4]')" onmouseout="hideTooltip()"></rect><rect x="400.0" y="108.61538461538461" width="48.0" height="91.38461538461539" class="bar" onmouseover="showTooltip(event, '33 values in bin [46.4, 50.0]')" onmouseout="hideTooltip()"></rect><rect x="450.0" y="28.307692307692292" width="48.0" height="171.6923076923077" class="bar" onmouseover="showTooltip(event, '62 values in bin [50.0, 53.5]')" onmouseout="hideTooltip()"></rect><rect x="500.0" y="58.769230769230774" width="48.0" height="141.23076923076923" class="bar" onmouseover="showTooltip(event, '51 values in bin [53.5, 57.0]')" onmouseout="hideTooltip()"></rect><rect x="550.0" y="130.76923076923077" width="48.0" height="69.23076923076924" class="bar" onmouseover="showTooltip(event, '25 values in bin [57.0, 60.6]')" onmouseout="hideTooltip()"></rect><rect x="600.0" y="64.30769230769232" width="48.0" height="135.69230769230768" class="bar" onmouseover="showTooltip(event, '49 values in bin [60.6, 64.2]')" onmouseout="hideTooltip()"></rect><rect x="650.0" y="100.3076923076923" width="48.0" height="99.6923076923077" class="bar" onmouseover="showTooltip(event, '36 values in bin [64.2, 67.7]')" onmouseout="hideTooltip()"></rect><rect x="700.0" y="20.0" width="48.0" height="180.0" class="bar" onmouseover="showTooltip(event, '65 values in bin [67.7, 71.2]')" onmouseout="hideTooltip()"></rect><rect x="750.0" y="100.3076923076923" width="48.0" height="99.6923076923077" class="bar" onmouseover="showTooltip(event, '36 values in bin [71.2, 74.8]')" onmouseout="hideTooltip()"></rect><rect x="800.0" y="47.69230769230771" width="48.0" height="152.3076923076923" class="bar" onmouseover="showTooltip(event, '55 values in bin [74.8, 78.3]')" onmouseout="hideTooltip()"></rect><rect x="850.0" y="47.69230769230771" width="48.0" height="152.3076923076923" class="bar" onmouseover="showTooltip(event, '55 values in bin [78.3, 81.9]')" onmouseout="hideTooltip()"></rect><rect x="900.0" y="83.69230769230768" width="48.0" height="116.30769230769232" class="bar" onmouseover="showTooltip(event, '42 values in bin [81.9, 85.5]')" onmouseout="hideTooltip()"></rect><rect x="950.0" y="69.84615384615384" width="48.0" height="130.15384615384616" class="bar" onmouseover="showTooltip(event, '47 values in bin [85.5, 89.0]')" onmouseout="hideTooltip()"></rect></svg>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--accent);">Income</h3>
+                        <span style="font-size: 0.8rem; padding: 4px 10px; background: rgba(99,102,241,0.2); border-radius: 20px;">float64</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Missing</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">93 (9.3%)</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Unique</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">907</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Mean</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">50856.68</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Median</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">50625.34</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Std</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">15353.72</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Min</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">-274.16</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Max</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">97510.58</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Skew</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0.03</div>
+                                </div>
+            
+                            </div>
+                        </div>
+                        <div style="flex: 2; height: 180px;">
+        <svg class="svg-chart" viewBox="0 0 1000 200" preserveAspectRatio="none"><rect x="0.0" y="198.4070796460177" width="48.0" height="1.592920353982301" class="bar" onmouseover="showTooltip(event, '1 values in bin [-274.2, 4615.1]')" onmouseout="hideTooltip()"></rect><rect x="50.0" y="198.4070796460177" width="48.0" height="1.592920353982301" class="bar" onmouseover="showTooltip(event, '1 values in bin [4615.1, 9504.3]')" onmouseout="hideTooltip()"></rect><rect x="100.0" y="193.6283185840708" width="48.0" height="6.371681415929204" class="bar" onmouseover="showTooltip(event, '4 values in bin [9504.3, 14393.6]')" onmouseout="hideTooltip()"></rect><rect x="150.0" y="182.47787610619469" width="48.0" height="17.52212389380531" class="bar" onmouseover="showTooltip(event, '11 values in bin [14393.6, 19282.8]')" onmouseout="hideTooltip()"></rect><rect x="200.0" y="172.92035398230087" width="48.0" height="27.07964601769912" class="bar" onmouseover="showTooltip(event, '17 values in bin [19282.8, 24172.0]')" onmouseout="hideTooltip()"></rect><rect x="250.0" y="147.43362831858406" width="48.0" height="52.56637168141593" class="bar" onmouseover="showTooltip(event, '33 values in bin [24172.0, 29061.3]')" onmouseout="hideTooltip()"></rect><rect x="300.0" y="109.20353982300885" width="48.0" height="90.79646017699115" class="bar" onmouseover="showTooltip(event, '57 values in bin [29061.3, 33950.5]')" onmouseout="hideTooltip()"></rect><rect x="350.0" y="83.71681415929203" width="48.0" height="116.28318584070797" class="bar" onmouseover="showTooltip(event, '73 values in bin [33950.5, 38839.7]')" onmouseout="hideTooltip()"></rect><rect x="400.0" y="47.079646017699105" width="48.0" height="152.9203539823009" class="bar" onmouseover="showTooltip(event, '96 values in bin [38839.7, 43729.0]')" onmouseout="hideTooltip()"></rect><rect x="450.0" y="20.0" width="48.0" height="180.0" class="bar" onmouseover="showTooltip(event, '113 values in bin [43729.0, 48618.2]')" onmouseout="hideTooltip()"></rect><rect x="500.0" y="21.592920353982294" width="48.0" height="178.4070796460177" class="bar" onmouseover="showTooltip(event, '112 values in bin [48618.2, 53507.4]')" onmouseout="hideTooltip()"></rect><rect x="550.0" y="27.964601769911496" width="48.0" height="172.0353982300885" class="bar" onmouseover="showTooltip(event, '108 values in bin [53507.4, 58396.7]')" onmouseout="hideTooltip()"></rect><rect x="600.0" y="51.858407079646014" width="48.0" height="148.141592920354" class="bar" onmouseover="showTooltip(event, '93 values in bin [58396.7, 63285.9]')" onmouseout="hideTooltip()"></rect><rect x="650.0" y="82.12389380530973" width="48.0" height="117.87610619469027" class="bar" onmouseover="showTooltip(event, '74 values in bin [63285.9, 68175.2]')" onmouseout="hideTooltip()"></rect><rect x="700.0" y="136.28318584070797" width="48.0" height="63.716814159292035" class="bar" onmouseover="showTooltip(event, '40 values in bin [68175.2, 73064.4]')" onmouseout="hideTooltip()"></rect><rect x="750.0" y="137.87610619469027" width="48.0" height="62.123893805309734" class="bar" onmouseover="showTooltip(event, '39 values in bin [73064.4, 77953.6]')" onmouseout="hideTooltip()"></rect><rect x="800.0" y="177.69911504424778" width="48.0" height="22.300884955752213" class="bar" onmouseover="showTooltip(event, '14 values in bin [77953.6, 82842.9]')" onmouseout="hideTooltip()"></rect><rect x="850.0" y="179.2920353982301" width="48.0" height="20.707964601769913" class="bar" onmouseover="showTooltip(event, '13 values in bin [82842.9, 87732.1]')" onmouseout="hideTooltip()"></rect><rect x="900.0" y="190.44247787610618" width="48.0" height="9.557522123893806" class="bar" onmouseover="showTooltip(event, '6 values in bin [87732.1, 92621.3]')" onmouseout="hideTooltip()"></rect><rect x="950.0" y="196.81415929203538" width="48.0" height="3.185840707964602" class="bar" onmouseover="showTooltip(event, '2 values in bin [92621.3, 97510.6]')" onmouseout="hideTooltip()"></rect></svg>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--accent);">Category</h3>
+                        <span style="font-size: 0.8rem; padding: 4px 10px; background: rgba(99,102,241,0.2); border-radius: 20px;">str</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Missing</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">20 (2.0%)</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Unique</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">4</div>
+                                </div>
+            
+                            </div>
+                        </div>
+                        <div style="flex: 2; height: 180px;">
+        <svg class="svg-chart" viewBox="0 0 1000 200" preserveAspectRatio="none"><rect x="0" y="0.0" width="900.0" height="46.0" class="bar" onmouseover="showTooltip(event, 'Premium: 262 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="30.0" fill="var(--text-dim)" style="font-size: 12px;">Premium</text><rect x="0" y="50.0" width="889.6946564885496" height="46.0" class="bar" onmouseover="showTooltip(event, 'Basic: 259 times')" onmouseout="hideTooltip()"></rect><text x="899.6946564885496" y="80.0" fill="var(--text-dim)" style="font-size: 12px;">Basic</text><rect x="0" y="100.0" width="820.9923664122138" height="46.0" class="bar" onmouseover="showTooltip(event, 'Enterprise: 239 times')" onmouseout="hideTooltip()"></rect><text x="830.9923664122138" y="130.0" fill="var(--text-dim)" style="font-size: 12px;">Enterprise</text><rect x="0" y="150.0" width="755.7251908396946" height="46.0" class="bar" onmouseover="showTooltip(event, 'Standard: 220 times')" onmouseout="hideTooltip()"></rect><text x="765.7251908396946" y="180.0" fill="var(--text-dim)" style="font-size: 12px;">Standard</text></svg>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--accent);">Active</h3>
+                        <span style="font-size: 0.8rem; padding: 4px 10px; background: rgba(99,102,241,0.2); border-radius: 20px;">str</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Missing</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0 (0.0%)</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Unique</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">2</div>
+                                </div>
+            
+                            </div>
+                        </div>
+                        <div style="flex: 2; height: 180px;">
+        <svg class="svg-chart" viewBox="0 0 1000 200" preserveAspectRatio="none"><rect x="0" y="0.0" width="900.0" height="96.0" class="bar" onmouseover="showTooltip(event, 'Yes: 507 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="55.0" fill="var(--text-dim)" style="font-size: 12px;">Yes</text><rect x="0" y="100.0" width="875.1479289940828" height="96.0" class="bar" onmouseover="showTooltip(event, 'No: 493 times')" onmouseout="hideTooltip()"></rect><text x="885.1479289940828" y="155.0" fill="var(--text-dim)" style="font-size: 12px;">No</text></svg>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--accent);">Satisfaction</h3>
+                        <span style="font-size: 0.8rem; padding: 4px 10px; background: rgba(99,102,241,0.2); border-radius: 20px;">float64</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Missing</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0 (0.0%)</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Unique</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">1,000</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Mean</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">3.01</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Median</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">3.04</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Std</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">1.15</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Min</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">1.01</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Max</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">4.99</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Skew</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">-0.04</div>
+                                </div>
+            
+                            </div>
+                        </div>
+                        <div style="flex: 2; height: 180px;">
+        <svg class="svg-chart" viewBox="0 0 1000 200" preserveAspectRatio="none"><rect x="0.0" y="47.69230769230771" width="48.0" height="152.3076923076923" class="bar" onmouseover="showTooltip(event, '55 values in bin [1.0, 1.2]')" onmouseout="hideTooltip()"></rect><rect x="50.0" y="75.38461538461539" width="48.0" height="124.61538461538461" class="bar" onmouseover="showTooltip(event, '45 values in bin [1.2, 1.4]')" onmouseout="hideTooltip()"></rect><rect x="100.0" y="58.769230769230774" width="48.0" height="141.23076923076923" class="bar" onmouseover="showTooltip(event, '51 values in bin [1.4, 1.6]')" onmouseout="hideTooltip()"></rect><rect x="150.0" y="89.23076923076923" width="48.0" height="110.76923076923077" class="bar" onmouseover="showTooltip(event, '40 values in bin [1.6, 1.8]')" onmouseout="hideTooltip()"></rect><rect x="200.0" y="50.46153846153845" width="48.0" height="149.53846153846155" class="bar" onmouseover="showTooltip(event, '54 values in bin [1.8, 2.0]')" onmouseout="hideTooltip()"></rect><rect x="250.0" y="61.53846153846152" width="48.0" height="138.46153846153848" class="bar" onmouseover="showTooltip(event, '50 values in bin [2.0, 2.2]')" onmouseout="hideTooltip()"></rect><rect x="300.0" y="50.46153846153845" width="48.0" height="149.53846153846155" class="bar" onmouseover="showTooltip(event, '54 values in bin [2.2, 2.4]')" onmouseout="hideTooltip()"></rect><rect x="350.0" y="94.76923076923076" width="48.0" height="105.23076923076924" class="bar" onmouseover="showTooltip(event, '38 values in bin [2.4, 2.6]')" onmouseout="hideTooltip()"></rect><rect x="400.0" y="33.84615384615384" width="48.0" height="166.15384615384616" class="bar" onmouseover="showTooltip(event, '60 values in bin [2.6, 2.8]')" onmouseout="hideTooltip()"></rect><rect x="450.0" y="80.92307692307692" width="48.0" height="119.07692307692308" class="bar" onmouseover="showTooltip(event, '43 values in bin [2.8, 3.0]')" onmouseout="hideTooltip()"></rect><rect x="500.0" y="58.769230769230774" width="48.0" height="141.23076923076923" class="bar" onmouseover="showTooltip(event, '51 values in bin [3.0, 3.2]')" onmouseout="hideTooltip()"></rect><rect x="550.0" y="58.769230769230774" width="48.0" height="141.23076923076923" class="bar" onmouseover="showTooltip(event, '51 values in bin [3.2, 3.4]')" onmouseout="hideTooltip()"></rect><rect x="600.0" y="53.230769230769226" width="48.0" height="146.76923076923077" class="bar" onmouseover="showTooltip(event, '53 values in bin [3.4, 3.6]')" onmouseout="hideTooltip()"></rect><rect x="650.0" y="67.07692307692307" width="48.0" height="132.92307692307693" class="bar" onmouseover="showTooltip(event, '48 values in bin [3.6, 3.8]')" onmouseout="hideTooltip()"></rect><rect x="700.0" y="58.769230769230774" width="48.0" height="141.23076923076923" class="bar" onmouseover="showTooltip(event, '51 values in bin [3.8, 4.0]')" onmouseout="hideTooltip()"></rect><rect x="750.0" y="20.0" width="48.0" height="180.0" class="bar" onmouseover="showTooltip(event, '65 values in bin [4.0, 4.2]')" onmouseout="hideTooltip()"></rect><rect x="800.0" y="75.38461538461539" width="48.0" height="124.61538461538461" class="bar" onmouseover="showTooltip(event, '45 values in bin [4.2, 4.4]')" onmouseout="hideTooltip()"></rect><rect x="850.0" y="53.230769230769226" width="48.0" height="146.76923076923077" class="bar" onmouseover="showTooltip(event, '53 values in bin [4.4, 4.6]')" onmouseout="hideTooltip()"></rect><rect x="900.0" y="47.69230769230771" width="48.0" height="152.3076923076923" class="bar" onmouseover="showTooltip(event, '55 values in bin [4.6, 4.8]')" onmouseout="hideTooltip()"></rect><rect x="950.0" y="94.76923076923076" width="48.0" height="105.23076923076924" class="bar" onmouseover="showTooltip(event, '38 values in bin [4.8, 5.0]')" onmouseout="hideTooltip()"></rect></svg>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--accent);">Joining_Date</h3>
+                        <span style="font-size: 0.8rem; padding: 4px 10px; background: rgba(99,102,241,0.2); border-radius: 20px;">str</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Missing</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0 (0.0%)</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Unique</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">1,000</div>
+                                </div>
+            
+                            </div>
+                        </div>
+                        <div style="flex: 2; height: 180px;">
+        <svg class="svg-chart" viewBox="0 0 1000 200" preserveAspectRatio="none"><rect x="0" y="0.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-01: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="15.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-01</text><rect x="0" y="20.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-02: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="35.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-02</text><rect x="0" y="40.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-03: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="55.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-03</text><rect x="0" y="60.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-04: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="75.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-04</text><rect x="0" y="80.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-05: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="95.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-05</text><rect x="0" y="100.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-06: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="115.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-06</text><rect x="0" y="120.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-07: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="135.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-07</text><rect x="0" y="140.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-08: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="155.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-08</text><rect x="0" y="160.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-09: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="175.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-09</text><rect x="0" y="180.0" width="900.0" height="16.0" class="bar" onmouseover="showTooltip(event, '2020-01-10: 1 times')" onmouseout="hideTooltip()"></rect><text x="910.0" y="195.0" fill="var(--text-dim)" style="font-size: 12px;">2020-01-10</text></svg>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--accent);">Churn</h3>
+                        <span style="font-size: 0.8rem; padding: 4px 10px; background: rgba(99,102,241,0.2); border-radius: 20px;">int64</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Missing</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0 (0.0%)</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Unique</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">2</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Mean</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0.19</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Median</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0.00</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Std</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0.39</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Min</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0.00</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Max</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">1.00</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Skew</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">1.57</div>
+                                </div>
+            
+                            </div>
+                        </div>
+                        <div style="flex: 2; height: 180px;">
+        <svg class="svg-chart" viewBox="0 0 1000 200" preserveAspectRatio="none"><rect x="0.0" y="20.0" width="48.0" height="180.0" class="bar" onmouseover="showTooltip(event, '808 values in bin [0.0, 0.1]')" onmouseout="hideTooltip()"></rect><rect x="50.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.1, 0.1]')" onmouseout="hideTooltip()"></rect><rect x="100.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.1, 0.2]')" onmouseout="hideTooltip()"></rect><rect x="150.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.2, 0.2]')" onmouseout="hideTooltip()"></rect><rect x="200.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.2, 0.2]')" onmouseout="hideTooltip()"></rect><rect x="250.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.2, 0.3]')" onmouseout="hideTooltip()"></rect><rect x="300.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.3, 0.4]')" onmouseout="hideTooltip()"></rect><rect x="350.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.4, 0.4]')" onmouseout="hideTooltip()"></rect><rect x="400.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.4, 0.5]')" onmouseout="hideTooltip()"></rect><rect x="450.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.5, 0.5]')" onmouseout="hideTooltip()"></rect><rect x="500.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.5, 0.6]')" onmouseout="hideTooltip()"></rect><rect x="550.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.6, 0.6]')" onmouseout="hideTooltip()"></rect><rect x="600.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.6, 0.7]')" onmouseout="hideTooltip()"></rect><rect x="650.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.7, 0.7]')" onmouseout="hideTooltip()"></rect><rect x="700.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.7, 0.8]')" onmouseout="hideTooltip()"></rect><rect x="750.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.8, 0.8]')" onmouseout="hideTooltip()"></rect><rect x="800.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.8, 0.9]')" onmouseout="hideTooltip()"></rect><rect x="850.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.9, 0.9]')" onmouseout="hideTooltip()"></rect><rect x="900.0" y="200.0" width="48.0" height="0.0" class="bar" onmouseover="showTooltip(event, '0 values in bin [0.9, 1.0]')" onmouseout="hideTooltip()"></rect><rect x="950.0" y="157.22772277227722" width="48.0" height="42.77227722772277" class="bar" onmouseover="showTooltip(event, '192 values in bin [1.0, 1.0]')" onmouseout="hideTooltip()"></rect></svg>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--accent);">Revenue_Estimate</h3>
+                        <span style="font-size: 0.8rem; padding: 4px 10px; background: rgba(99,102,241,0.2); border-radius: 20px;">float64</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Missing</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">93 (9.3%)</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Unique</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">907</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Mean</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">55941.61</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Median</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">55747.50</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Std</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">16888.34</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Min</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">-468.62</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Max</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">107369.90</div>
+                                </div>
+            
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Skew</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600;">0.02</div>
+                                </div>
+            
+                            </div>
+                        </div>
+                        <div style="flex: 2; height: 180px;">
+        <svg class="svg-chart" viewBox="0 0 1000 200" preserveAspectRatio="none"><rect x="0.0" y="198.4070796460177" width="48.0" height="1.592920353982301" class="bar" onmouseover="showTooltip(event, '1 values in bin [-468.6, 4923.3]')" onmouseout="hideTooltip()"></rect><rect x="50.0" y="198.4070796460177" width="48.0" height="1.592920353982301" class="bar" onmouseover="showTooltip(event, '1 values in bin [4923.3, 10315.2]')" onmouseout="hideTooltip()"></rect><rect x="100.0" y="193.6283185840708" width="48.0" height="6.371681415929204" class="bar" onmouseover="showTooltip(event, '4 values in bin [10315.2, 15707.2]')" onmouseout="hideTooltip()"></rect><rect x="150.0" y="182.47787610619469" width="48.0" height="17.52212389380531" class="bar" onmouseover="showTooltip(event, '11 values in bin [15707.2, 21099.1]')" onmouseout="hideTooltip()"></rect><rect x="200.0" y="172.92035398230087" width="48.0" height="27.07964601769912" class="bar" onmouseover="showTooltip(event, '17 values in bin [21099.1, 26491.0]')" onmouseout="hideTooltip()"></rect><rect x="250.0" y="147.43362831858406" width="48.0" height="52.56637168141593" class="bar" onmouseover="showTooltip(event, '33 values in bin [26491.0, 31882.9]')" onmouseout="hideTooltip()"></rect><rect x="300.0" y="110.79646017699115" width="48.0" height="89.20353982300885" class="bar" onmouseover="showTooltip(event, '56 values in bin [31882.9, 37274.9]')" onmouseout="hideTooltip()"></rect><rect x="350.0" y="80.53097345132743" width="48.0" height="119.46902654867257" class="bar" onmouseover="showTooltip(event, '75 values in bin [37274.9, 42666.8]')" onmouseout="hideTooltip()"></rect><rect x="400.0" y="50.26548672566372" width="48.0" height="149.73451327433628" class="bar" onmouseover="showTooltip(event, '94 values in bin [42666.8, 48058.7]')" onmouseout="hideTooltip()"></rect><rect x="450.0" y="20.0" width="48.0" height="180.0" class="bar" onmouseover="showTooltip(event, '113 values in bin [48058.7, 53450.6]')" onmouseout="hideTooltip()"></rect><rect x="500.0" y="20.0" width="48.0" height="180.0" class="bar" onmouseover="showTooltip(event, '113 values in bin [53450.6, 58842.6]')" onmouseout="hideTooltip()"></rect><rect x="550.0" y="34.3362831858407" width="48.0" height="165.6637168141593" class="bar" onmouseover="showTooltip(event, '104 values in bin [58842.6, 64234.5]')" onmouseout="hideTooltip()"></rect><rect x="600.0" y="45.48672566371681" width="48.0" height="154.5132743362832" class="bar" onmouseover="showTooltip(event, '97 values in bin [64234.5, 69626.4]')" onmouseout="hideTooltip()"></rect><rect x="650.0" y="82.12389380530973" width="48.0" height="117.87610619469027" class="bar" onmouseover="showTooltip(event, '74 values in bin [69626.4, 75018.3]')" onmouseout="hideTooltip()"></rect><rect x="700.0" y="133.09734513274336" width="48.0" height="66.90265486725664" class="bar" onmouseover="showTooltip(event, '42 values in bin [75018.3, 80410.3]')" onmouseout="hideTooltip()"></rect><rect x="750.0" y="141.06194690265488" width="48.0" height="58.93805309734513" class="bar" onmouseover="showTooltip(event, '37 values in bin [80410.3, 85802.2]')" onmouseout="hideTooltip()"></rect><rect x="800.0" y="172.92035398230087" width="48.0" height="27.07964601769912" class="bar" onmouseover="showTooltip(event, '17 values in bin [85802.2, 91194.1]')" onmouseout="hideTooltip()"></rect><rect x="850.0" y="182.47787610619469" width="48.0" height="17.52212389380531" class="bar" onmouseover="showTooltip(event, '11 values in bin [91194.1, 96586.0]')" onmouseout="hideTooltip()"></rect><rect x="900.0" y="192.0353982300885" width="48.0" height="7.964601769911504" class="bar" onmouseover="showTooltip(event, '5 values in bin [96586.0, 101978.0]')" onmouseout="hideTooltip()"></rect><rect x="950.0" y="196.81415929203538" width="48.0" height="3.185840707964602" class="bar" onmouseover="showTooltip(event, '2 values in bin [101978.0, 107369.9]')" onmouseout="hideTooltip()"></rect></svg>
+                        </div>
+                    </div>
+                </div>
+        
+            </div>
+
+            <div id="correlations" class="tab-content">
+                <h2 style="margin-top: 0;">Feature Correlation Matrix</h2>
+                <div class="card">
+                    <div class="heatmap-grid" style="grid-template-columns: repeat(5, 1fr); max-width: 600px; margin: 0 auto;">
+    <div class="heatmap-cell" style="background: rgba(99, 102, 241, 1.0);" onmouseover="showTooltip(event, 'Age x Age: 1.000')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.041948981165628);" onmouseover="showTooltip(event, 'Age x Income: 0.042')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.05851281745757285);" onmouseover="showTooltip(event, 'Age x Satisfaction: -0.059')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.021603669603857734);" onmouseover="showTooltip(event, 'Age x Churn: -0.022')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.04164726171418997);" onmouseover="showTooltip(event, 'Age x Revenue_Estimate: 0.042')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.041948981165628);" onmouseover="showTooltip(event, 'Income x Age: 0.042')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 1.0);" onmouseover="showTooltip(event, 'Income x Income: 1.000')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.018434493484778297);" onmouseover="showTooltip(event, 'Income x Satisfaction: 0.018')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.05253000606188057);" onmouseover="showTooltip(event, 'Income x Churn: -0.053')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.9999837124620623);" onmouseover="showTooltip(event, 'Income x Revenue_Estimate: 1.000')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.05851281745757285);" onmouseover="showTooltip(event, 'Satisfaction x Age: -0.059')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.018434493484778297);" onmouseover="showTooltip(event, 'Satisfaction x Income: 0.018')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 1.0);" onmouseover="showTooltip(event, 'Satisfaction x Satisfaction: 1.000')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.009404486521967636);" onmouseover="showTooltip(event, 'Satisfaction x Churn: -0.009')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.018616630698596783);" onmouseover="showTooltip(event, 'Satisfaction x Revenue_Estimate: 0.019')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.021603669603857734);" onmouseover="showTooltip(event, 'Churn x Age: -0.022')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.05253000606188057);" onmouseover="showTooltip(event, 'Churn x Income: -0.053')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.009404486521967636);" onmouseover="showTooltip(event, 'Churn x Satisfaction: -0.009')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 1.0);" onmouseover="showTooltip(event, 'Churn x Churn: 1.000')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.052660980418102785);" onmouseover="showTooltip(event, 'Churn x Revenue_Estimate: -0.053')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.04164726171418997);" onmouseover="showTooltip(event, 'Revenue_Estimate x Age: 0.042')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.9999837124620623);" onmouseover="showTooltip(event, 'Revenue_Estimate x Income: 1.000')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 0.018616630698596783);" onmouseover="showTooltip(event, 'Revenue_Estimate x Satisfaction: 0.019')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(239, 68, 68, 0.052660980418102785);" onmouseover="showTooltip(event, 'Revenue_Estimate x Churn: -0.053')" onmouseout="hideTooltip()"></div><div class="heatmap-cell" style="background: rgba(99, 102, 241, 1.0);" onmouseover="showTooltip(event, 'Revenue_Estimate x Revenue_Estimate: 1.000')" onmouseout="hideTooltip()"></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--text-dim);">
+                        Hover over cells to see exact correlation coefficients.
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: SAMPLE DATA -->
+            <div id="sample" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">Data Preview (Top 20)</h2>
+                    <input type="text" id="sampleSearch" class="search-box" placeholder="Search rows..." onkeyup="filterTable()">
+                </div>
+                <div class="card table-container">
+                    <table id="sampleTable">
+                        <thead>
+                            <tr>
+    <th>Age</th><th>Income</th><th>Category</th><th>Active</th><th>Satisfaction</th><th>Joining_Date</th><th>Churn</th><th>Revenue_Estimate</th></tr></thead><tbody><tr><td>69.0</td><td>46147.74458111402</td><td>Standard</td><td>Yes</td><td>3.0003204730863304</td><td>2020-01-01</td><td>1</td><td>50941.10615165584</td></tr><tr><td>32.0</td><td>65364.29872669085</td><td>Standard</td><td>Yes</td><td>4.14039085638283</td><td>2020-01-02</td><td>1</td><td>71930.43417650914</td></tr><tr><td>89.0</td><td>25662.145547033717</td><td>Basic</td><td>No</td><td>3.395381600317756</td><td>2020-01-03</td><td>0</td><td>28297.700072324278</td></tr><tr><td>78.0</td><td>nan</td><td>Premium</td><td>Yes</td><td>1.8043949097706697</td><td>2020-01-04</td><td>1</td><td>nan</td></tr><tr><td>38.0</td><td>50383.5700461415</td><td>Basic</td><td>No</td><td>3.360930636603571</td><td>2020-01-05</td><td>0</td><td>55399.58275976934</td></tr><tr><td>41.0</td><td>28837.24204391326</td><td>Enterprise</td><td>No</td><td>2.630531431918623</td><td>2020-01-06</td><td>0</td><td>31534.231791434635</td></tr><tr><td>20.0</td><td>24372.450806472385</td><td>Enterprise</td><td>No</td><td>2.8781021681754506</td><td>2020-01-07</td><td>1</td><td>26889.169808825158</td></tr><tr><td>39.0</td><td>65155.175044123665</td><td>Standard</td><td>Yes</td><td>1.1132450976106711</td><td>2020-01-08</td><td>0</td><td>71778.66066900828</td></tr><tr><td>70.0</td><td>64441.8603552604</td><td>Premium</td><td>No</td><td>1.8401173980651264</td><td>2020-01-09</td><td>0</td><td>70790.96016223977</td></tr><tr><td>19.0</td><td>52588.37644451539</td><td>Premium</td><td>Yes</td><td>2.124152325524113</td><td>2020-01-10</td><td>0</td><td>57829.3285768161</td></tr><tr><td>nan</td><td>75749.86664682085</td><td>Enterprise</td><td>Yes</td><td>3.851840031435223</td><td>2020-01-11</td><td>0</td><td>83293.47918376751</td></tr><tr><td>55.0</td><td>56614.52272791903</td><td>Basic</td><td>Yes</td><td>1.0459698931924613</td><td>2020-01-12</td><td>0</td><td>62317.99033010957</td></tr><tr><td>19.0</td><td>68747.07979116823</td><td>Standard</td><td>Yes</td><td>2.635109044916528</td><td>2020-01-13</td><td>1</td><td>75567.35141213416</td></tr><tr><td>81.0</td><td>56304.86880776781</td><td>Basic</td><td>No</td><td>4.696107481702931</td><td>2020-01-14</td><td>1</td><td>62028.489780862896</td></tr><tr><td>77.0</td><td>45862.856515970125</td><td>Basic</td><td>Yes</td><td>1.4475224661964954</td><td>2020-01-15</td><td>0</td><td>50456.2745991796</td></tr><tr><td>38.0</td><td>34137.031228499865</td><td>Basic</td><td>No</td><td>3.065697552874444</td><td>2020-01-16</td><td>0</td><td>37295.792045791386</td></tr><tr><td>50.0</td><td>40948.45617645856</td><td>Premium</td><td>No</td><td>4.146089529563389</td><td>2020-01-17</td><td>0</td><td>45087.57382162368</td></tr><tr><td>75.0</td><td>46143.165931291725</td><td>Enterprise</td><td>Yes</td><td>4.770125230080467</td><td>2020-01-18</td><td>1</td><td>50857.11762317998</td></tr><tr><td>39.0</td><td>70447.29653160057</td><td>Premium</td><td>No</td><td>3.987106558134872</td><td>2020-01-19</td><td>0</td><td>77376.82001873414</td></tr><tr><td>66.0</td><td>61548.79337794495</td><td>Enterprise</td><td>No</td><td>3.8822621945776246</td><td>2020-01-20</td><td>0</td><td>67744.5454092369</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function showTab(tabId, el) {
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                el.classList.add('active');
+            }
+
+            const tooltip = document.getElementById('tooltip');
+            function showTooltip(e, text) {
+                tooltip.innerHTML = text;
+                tooltip.style.opacity = '1';
+                tooltip.style.left = (e.clientX + 15) + 'px';
+                tooltip.style.top = (e.clientY + 15) + 'px';
+            }
+            function hideTooltip() {
+                tooltip.style.opacity = '0';
+            }
+
+            function filterTable() {
+                const input = document.getElementById('sampleSearch');
+                const filter = input.value.toLowerCase();
+                const table = document.getElementById('sampleTable');
+                const tr = table.getElementsByTagName('tr');
+
+                for (let i = 1; i < tr.length; i++) {
+                    let text = tr[i].textContent || tr[i].innerText;
+                    tr[i].style.display = text.toLowerCase().indexOf(filter) > -1 ? "" : "none";
+                }
+            }
+        </script>
+    </body>
+    </html>
+    

@@ -13,8 +13,7 @@ def auto(
     Automatically clean and prepare a DataFrame.
     """
     if df.empty:
-        if verbose: print("Warning: Empty DataFrame provided.")
-        return (df, {}) if eda_report else df
+        raise ValueError("Input DataFrame is empty. dfx.auto() requires a non-empty dataset.")
 
     if verbose:
         print("\nStarting auto-cleaning workflow...")

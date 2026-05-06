@@ -15,3 +15,9 @@ test_cli.csv
 implementation_plan.md
 task.md
 walkthrough.md
+*.html
+verify_*.py
+test_*.json
+test_*.csv
+!tests/test_*.py
+!tests/verify_*.py

@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.4] - 2026-05-06
+
+### Added
+- **Dual-Theme Reports**: `dfx.report()` now features a professional Light theme by default with a button to toggle Dark Mode.
+- **Improved UX**: Streamlined sidebar navigation and cleaner typography for a "no headaches" professional UI.
+
+## [0.3.3] - 2026-05-06
+
+### Added
+- **Premium Interactive Reports**: Added interactive tabs, missingness maps, and correlation heatmaps to `dfx.report()`.
+- **Statistical Profiling**: Added Mean, Median, Std Dev, and Skewness to report details.
+
+## [0.3.2] - 2026-05-06
+
+### Changed
+- **Strict Validation**: `dfx.auto()` now raises a `ValueError` for empty DataFrames to fail-fast in pipelines.
+
+## [0.3.1] - 2026-05-06
+
+### Fixed
+- **API Consistency**: Fixed missing `columns` parameter in `outliers()` and `threshold` in `suggest_features()`.
+- **Pipeline Persistence**: Implemented `save()` and `load()` methods for `Pipeline` objects.
+- **De-duplication**: `clean_column_names()` now handles duplicate column names by appending indices.
+
 ## [0.3.0] - 2026-05-06
 
 ### Added

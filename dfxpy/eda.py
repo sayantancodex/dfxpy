@@ -1,5 +1,6 @@
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from .reporting import generate_html_report
 
 def eda(df: pd.DataFrame, verbose: bool = True) -> Dict[str, Any]:
     """
@@ -33,3 +34,24 @@ def eda(df: pd.DataFrame, verbose: bool = True) -> Dict[str, Any]:
         print("------------------\n")
 
     return report
+
+def report(df: pd.DataFrame, output: str = "report.html", verbose: bool = True) -> str:
+    """
+    Generate a beautiful HTML EDA report.
+    """
+    if verbose:
+        print(f"Generating HTML report: {output}...")
+    
+    # Get basic EDA data
+    report_data = eda(df, verbose=False)
+    
+    # Add version info (mocked or from package)
+    report_data['version'] = "0.2.6" 
+    
+    # Generate the file
+    path = generate_html_report(df, report_data, output)
+    
+    if verbose:
+        print(f"Report saved to {path}")
+    
+    return path

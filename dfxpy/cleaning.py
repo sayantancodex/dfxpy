@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 from typing import List, Optional
+from .history import log_change
 
 def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -18,6 +19,7 @@ def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
         return name.lower().strip('_')
     
     df.columns = [to_snake(c) for c in df.columns]
+    log_change(df, f"Cleaned column names: {list(df.columns)}")
     return df
 
 def drop_duplicates(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
@@ -29,38 +31,80 @@ def drop_duplicates(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     final_count = len(df)
     if verbose and initial_count != final_count:
         print(f"Dropped {initial_count - final_count} duplicate rows.")
+        log_change(df, f"Dropped {initial_count - final_count} duplicate rows.")
     return df
 
 def infer_types(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     """
     Try to infer better data types for object/string columns.
+    Handles currency ($), percentages (%), and booleans.
     """
     df = df.copy()
-    # Check for both object and string dtypes
     obj_cols = [c for c in df.columns if pd.api.types.is_string_dtype(df[c]) or df[c].dtype == 'object']
     
     for col in obj_cols:
-        # Try numeric
-        try:
-            temp_col = pd.to_numeric(df[col], errors='raise')
-            df[col] = temp_col
-            if verbose:
-                print(f"Converted '{col}' to numeric.")
+        series = df[col].dropna().astype(str).str.strip()
+        if series.empty:
             continue
-        except (ValueError, TypeError):
-            pass
-        
-        # Try datetime
+
+        # 1. Try Booleans
+        bool_map = {'true': True, 'false': False, 'yes': True, 'no': False, 't': True, 'f': False, '1': True, '0': False}
+        if series.str.lower().isin(bool_map.keys()).all():
+            df[col] = series.str.lower().map(bool_map)
+            if verbose: print(f"Converted '{col}' to boolean.")
+            log_change(df, f"Converted '{col}' to boolean.")
+            continue
+
+        # 2. Try Currency ($100, £50)
+        if series.str.contains(r'^[£\$€¥]').any() or series.str.contains(r'[£\$€¥]$').any():
+            clean_series = series.str.replace(r'[£\$€¥,]', '', regex=True)
+            try:
+                df[col] = pd.to_numeric(clean_series)
+                if verbose: print(f"Converted '{col}' from currency to numeric.")
+                log_change(df, f"Converted '{col}' from currency to numeric.")
+                continue
+            except: pass
+
+        # 3. Try Percentage (10%)
+        if series.str.contains(r'%$').any():
+            clean_series = series.str.replace('%', '', regex=False)
+            try:
+                df[col] = pd.to_numeric(clean_series) / 100.0
+                if verbose: print(f"Converted '{col}' from percentage to numeric.")
+                log_change(df, f"Converted '{col}' from percentage to numeric.")
+                continue
+            except: pass
+
+        # 4. Try Numeric
         try:
-            # Check if it looks like a date (contains '-' or '/')
-            sample = df[col].dropna().head(10).astype(str)
-            if not sample.empty and sample.str.contains(r'[-/:]').any():
+            df[col] = pd.to_numeric(df[col], errors='raise')
+            if verbose: print(f"Converted '{col}' to numeric.")
+            log_change(df, f"Converted '{col}' to numeric.")
+            continue
+        except: pass
+        
+        # 5. Try Datetime
+        try:
+            # More aggressive date detection
+            if series.str.contains(r'[-/:]').any() or series.str.contains(r'\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b', case=False, regex=True).any():
                 df[col] = pd.to_datetime(df[col], errors='raise')
-                if verbose:
-                    print(f"Converted '{col}' to datetime.")
-        except (ValueError, TypeError, pd.errors.ParserError):
-            pass
+                if verbose: print(f"Converted '{col}' to datetime.")
+                log_change(df, f"Converted '{col}' to datetime.")
+        except: pass
     
+    return df
+
+def fix(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
+    """
+    One-stop shop for cleaning and fixing a dataset.
+    Intelligently detects types, cleans names, and handles duplicates.
+    """
+    if verbose: print("\n--- FIXING DATASET ---")
+    df = clean_column_names(df)
+    df = drop_duplicates(df, verbose=verbose)
+    df = infer_types(df, verbose=verbose)
+    df = handle_missing(df, verbose=verbose)
+    if verbose: print("----------------------\n")
     return df
 
 def handle_missing(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
@@ -79,6 +123,7 @@ def handle_missing(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
         df = df.drop(columns=all_null_cols)
         if verbose:
             print(f"Dropped entirely empty columns: {all_null_cols}")
+        log_change(df, f"Dropped empty columns: {all_null_cols}")
 
     numeric_cols = df.select_dtypes(include=['number']).columns
     categorical_cols = [c for c in df.columns if pd.api.types.is_string_dtype(df[c]) or df[c].dtype in ['object', 'category', 'bool']]
@@ -90,6 +135,7 @@ def handle_missing(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
             df[col] = df[col].fillna(median_val)
             if verbose:
                 print(f"Imputed '{col}' (numeric) with median: {median_val}")
+            log_change(df, f"Imputed '{col}' (numeric) with median: {median_val}")
 
     for col in categorical_cols:
         if df[col].isnull().any():
@@ -98,6 +144,7 @@ def handle_missing(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
                 df[col] = df[col].fillna(mode_val[0])
                 if verbose:
                     print(f"Imputed '{col}' (categorical) with mode: {mode_val[0]}")
+                log_change(df, f"Imputed '{col}' (categorical) with mode: {mode_val[0]}")
 
     for col in date_cols:
         if df[col].isnull().any():
@@ -106,5 +153,6 @@ def handle_missing(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
                 df[col] = df[col].fillna(mode_val[0])
                 if verbose:
                     print(f"Imputed '{col}' (date) with most frequent: {mode_val[0]}")
+                log_change(df, f"Imputed '{col}' (date) with most frequent: {mode_val[0]}")
 
     return df

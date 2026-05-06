@@ -20,6 +20,15 @@ The primary entry point for rapid data cleaning.
   - One-hot encodes categorical variables.
 - **Returns**: A cleaned `pd.DataFrame`.
 
+### `fix(df)`
+Advanced, multi-pass cleaning and repair tool.
+- **Actions**:
+  - Cleans column names to snake_case.
+  - Drops duplicates.
+  - **Advanced Inference**: Detects and converts Currency ($), Percentages (%), Booleans (Yes/No), and complex Date strings.
+  - **Auto-Imputation**: Handles missing values based on data type.
+- **Returns**: A fully repaired `pd.DataFrame`.
+
 ### `prepare(df, target, scale=False, verbose=True)`
 Streamlines the path from raw data to machine learning models.
 - **Parameters**:
@@ -46,6 +55,9 @@ Generates a structured Exploratory Data Analysis summary.
   - Missing value counts.
   - Unique value counts.
 
+### `report(df, output='report.html')`
+Generates a premium, standalone HTML EDA report. Includes histograms and missingness heatmaps.
+
 ### `audit(df)`
 Performs an automated diagnostic "check-up" of the dataset.
 - **Flags**:
@@ -53,6 +65,12 @@ Performs an automated diagnostic "check-up" of the dataset.
   - **High Cardinality**: Flags categorical columns with too many unique values.
   - **Skewness**: Detects extreme numeric skewness.
   - **Multicollinearity**: Identifies features that are highly correlated with each other.
+
+### `leakage(df, target)`
+Detects potential data leakage by identifying features with suspicious predictive power.
+
+### `compare(df1, df2)`
+Generates a detailed diff between two DataFrames (columns, rows, and values).
 
 ---
 
@@ -82,9 +100,24 @@ Detects and handles numerical outliers.
   - `cap`: Caps values at the lower/upper bounds.
   - `remove`: Drops rows containing outliers.
 
+### `suggest(df, target)`
+Recommends specific ML algorithms based on dataset scale and distribution.
+
 ### `suggest_features(df, target, threshold=0.1)`
 Ranks features based on their correlation with the target variable.
 - **Returns**: A list of recommended features that meet the correlation threshold.
+
+### `balance(df, target, method='oversample')`
+Balances class distributions using oversampling, undersampling, or synthetic methods.
+
+### `validate(df, schema)`
+Validates data against a predefined schema contract.
+
+### `pipeline(steps)`
+Creates a reusable `Pipeline` object for chaining transformations.
+
+### `analyze_cleaning(df)`
+Explains every cleaning action performed on the dataset by reading its history.
 
 ---
 

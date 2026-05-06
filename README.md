@@ -45,6 +45,27 @@ Generates structured, human-readable summaries of shapes, nulls, unique counts, 
 ### 🧹 Outlier Management (`outliers`)
 Detect and handle outliers using the IQR (Interquartile Range) method with options to **remove** or **cap**.
 
+### 📊 One-Click Reports (`report`)
+Generate beautiful, standalone HTML EDA reports with distributions and missing value summaries—zero dependencies required.
+
+### 🔄 Dataset Comparison (`compare`)
+Instantly track changes between two versions of a dataset. Detects shape shifts, column changes, and cell-level value modifications.
+
+### ⚖️ Smart Balancing (`balance`)
+Handle imbalanced datasets with ease using Oversampling, Undersampling, or synthetic interpolation.
+
+### 🛡️ Data Contracts (`validate`)
+Enforce rigorous data contracts with schema validation. Ensure your pipeline only processes data that meets your quality standards.
+
+### 🏗️ Workflow Pipelines (`pipeline`)
+Build, save, and reuse complex cleaning workflows with the new chainable pipeline engine.
+
+### 💡 ML Model Advisor (`suggest`)
+Get instant recommendations on which ML algorithms (XGBoost, LightGBM, etc.) to use based on your dataset's specific characteristics.
+
+### 🕵️ Explainable Cleaning (`analyze_cleaning`)
+Understand exactly what happened to your data. Logs every transformation and repair for full transparency.
+
 ---
 
 ## 📦 Installation
@@ -100,6 +121,9 @@ dfxpy prepare data.csv --target price --output cleaned_features.csv
 | **Handle Nulls** | `df['val'].fillna(df['val'].median())` | `dfx.auto(df)` |
 | **ML Prep** | 10+ lines (Split, Encode, Scale) | `dfx.prepare(df, target='y')` |
 | **Audit** | Manual inspection | `dfx.audit(df)` |
+| **HTML Report** | 50+ lines (Matplotlib/Jinja) | `dfx.report(df)` |
+| **Dataset Diff** | `df1.compare(df2)` (limited) | `dfx.compare(df1, df2)` |
+| **Explainability** | Manual logging | `dfx.analyze_cleaning(df)` |
 
 ---
 

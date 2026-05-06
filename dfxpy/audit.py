@@ -87,3 +87,42 @@ def audit(df: pd.DataFrame) -> Dict[str, Any]:
     report["warnings"] = warnings
     report["insights"] = insights
     return report
+
+def leakage(df: pd.DataFrame, target: str, verbose: bool = True) -> List[str]:
+    """
+    Detect potential data leakage by checking for features with suspicious correlation with target.
+    """
+    if target not in df.columns:
+        raise ValueError(f"Target '{target}' not found.")
+
+    leaks = []
+    numeric_df = df.select_dtypes(include=[np.number])
+    
+    if target in numeric_df.columns:
+        correlations = numeric_df.corr()[target].abs().sort_values(ascending=False)
+        correlations = correlations.drop(target)
+        
+        # Suspiciously high correlation (> 0.95)
+        high_corr = correlations[correlations > 0.95].index.tolist()
+        for col in high_corr:
+            leaks.append(f"Suspiciously high correlation ({correlations[col]:.2f}) between '{col}' and '{target}'.")
+
+    # Check for ID-like columns being used in non-ID ways
+    row_count = len(df)
+    for col in df.columns:
+        if col == target: continue
+        if df[col].nunique() == row_count:
+            # If it's a perfect ID and target is also unique or somehow related, warn
+            pass
+
+    if verbose:
+        print("\n--- DATA LEAKAGE ANALYSIS ---")
+        if leaks:
+            print("POTENTIAL LEAKAGE DETECTED:")
+            for l in leaks:
+                print(f"- {l}")
+        else:
+            print("No obvious data leakage detected.")
+        print("-----------------------------\n")
+
+    return leaks

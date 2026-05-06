@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-05-06
+
+### Added
+- **Premium HTML Reports**: `dfx.report()` generates standalone, interactive EDA reports.
+- **Explainable Cleaning**: `dfx.analyze_cleaning()` tracks and explains all transformations using `df.attrs`.
+- **Advanced Fixing**: `dfx.fix()` intelligently repairs currency, percentages, booleans, and messy dates.
+- **Dataset Diffing**: `dfx.compare()` tracks detailed changes between data versions.
+- **Imbalanced Data Support**: `dfx.balance()` adds oversampling, undersampling, and synthetic interpolation.
+- **Workflow Pipelines**: `dfx.pipeline()` for building reusable cleaning chains.
+- **ML Advisor**: `dfx.suggest()` recommends models based on dataset profile.
+- **Validation**: `dfx.validate()` enforces data contracts via schemas.
+- **Leakage Detection**: `dfx.leakage()` identifies potential target leakage.
+
 ## [0.2.0] - 2026-05-05
 
 ### Added

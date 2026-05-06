@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import Dict, List, Any
 
-def suggest_features(df: pd.DataFrame, target: str) -> Dict[str, Any]:
+def suggest_features(df: pd.DataFrame, target: str, threshold: float = 0.1) -> Dict[str, Any]:
     """
     Rank features by correlation with target and highlight strong/weak/redundant features.
     """
@@ -19,7 +19,7 @@ def suggest_features(df: pd.DataFrame, target: str) -> Dict[str, Any]:
     correlations = correlations.drop(target) # Drop target itself
 
     strong_predictors = correlations[correlations > 0.5].index.tolist()
-    weak_features = correlations[correlations < 0.1].index.tolist()
+    weak_features = correlations[correlations < threshold].index.tolist()
     
     print("\n--- FEATURE SUGGESTIONS ---")
     print(f"Target: {target}")
@@ -30,7 +30,7 @@ def suggest_features(df: pd.DataFrame, target: str) -> Dict[str, Any]:
             print(f"- {f} ({correlations[f]:.2f})")
     
     if weak_features:
-        print("Weak Features (Correlation < 0.1):")
+        print(f"Weak Features (Correlation < {threshold}):")
         for f in weak_features:
             print(f"- {f} ({correlations[f]:.2f})")
 

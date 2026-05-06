@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
-from typing import Literal
+from typing import Literal, List, Optional
 
 def handle_outliers(
     df: pd.DataFrame, 
     method: Literal["iqr"] = "iqr", 
     action: Literal["remove", "cap"] = "cap",
+    columns: Optional[List[str]] = None,
     verbose: bool = True
 ) -> pd.DataFrame:
     """
@@ -13,6 +14,8 @@ def handle_outliers(
     """
     df = df.copy()
     num_cols = df.select_dtypes(include=['number']).columns
+    if columns:
+        num_cols = [c for c in num_cols if c in columns]
     
     for col in num_cols:
         Q1 = df[col].quantile(0.25)

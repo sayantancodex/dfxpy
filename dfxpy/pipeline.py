@@ -29,6 +29,29 @@ class Pipeline:
         if verbose: print("--- PIPELINE COMPLETED ---\n")
         return current_df
 
+    def save(self, path: str):
+        """Save pipeline steps to a JSON file."""
+        step_names = [getattr(s, '__name__', 'unknown') for s in self.steps]
+        with open(path, 'w') as f:
+            json.dump({"steps": step_names}, f)
+        print(f"Pipeline saved to {path}")
+
+    @classmethod
+    def load(cls, path: str, registry: Dict[str, Callable] = None):
+        """Load pipeline steps from a JSON file."""
+        with open(path, 'r') as f:
+            data = json.load(f)
+        
+        # If no registry provided, we'll try to find them in dfxpy (if we can)
+        # For now, let's assume a registry is helpful or we just return the names
+        steps = []
+        if registry:
+            steps = [registry[name] for name in data['steps'] if name in registry]
+        
+        pipe = cls(steps)
+        print(f"Pipeline loaded from {path} ({len(steps)} steps resolved)")
+        return pipe
+
     def __repr__(self):
         return f"DfxPipeline(steps={[getattr(s, '__name__', 'func') for s in self.steps]})"
 

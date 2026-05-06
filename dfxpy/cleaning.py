@@ -18,7 +18,20 @@ def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
         name = re.sub(r'_+', '_', name)
         return name.lower().strip('_')
     
-    df.columns = [to_snake(c) for c in df.columns]
+    cleaned_cols = [to_snake(c) for c in df.columns]
+    
+    # Handle duplicates
+    new_cols = []
+    counts = {}
+    for col in cleaned_cols:
+        if col in counts:
+            counts[col] += 1
+            new_cols.append(f"{col}_{counts[col]}")
+        else:
+            counts[col] = 0
+            new_cols.append(col)
+    
+    df.columns = new_cols
     log_change(df, f"Cleaned column names: {list(df.columns)}")
     return df
 
@@ -86,7 +99,7 @@ def infer_types(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
         # 5. Try Datetime
         try:
             # More aggressive date detection
-            if series.str.contains(r'[-/:]').any() or series.str.contains(r'\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b', case=False, regex=True).any():
+            if series.str.contains(r'[-/:]', regex=True).any() or series.str.contains(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b', case=False, regex=True).any():
                 df[col] = pd.to_datetime(df[col], errors='raise')
                 if verbose: print(f"Converted '{col}' to datetime.")
                 log_change(df, f"Converted '{col}' to datetime.")
